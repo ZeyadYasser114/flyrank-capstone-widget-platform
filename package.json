@@ -1,0 +1,20 @@
+{
+  "name": "flyrank-capstone-widget-platform",
+  "version": "1.0.0",
+  "description": "\"# flyrank-capstone-widget-platform\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZeyadYasser114/flyrank-capstone-widget-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZeyadYasser114/flyrank-capstone-widget-platform/issues"
+  },
+  "homepage": "https://github.com/ZeyadYasser114/flyrank-capstone-widget-platform#readme"
+}
