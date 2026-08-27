@@ -15,6 +15,18 @@ async function init() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
     `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS submissions (
+            id SERIAL PRIMARY KEY,
+            widget_id INT NOT NULL,
+            data JSONB NOT NULL,
+            ip_address TEXT NOT NULL,
+            country TEXT,
+            city TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+    `);
 }
 
 init();
