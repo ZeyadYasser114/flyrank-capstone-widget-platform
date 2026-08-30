@@ -2,6 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const pool = require('./db.js');
+const rateLimit = require('express-rate-limit');
+
+const submissionLimiter = rateLimit({
+    windowMs: 60  * 1000,
+    max: 5,
+    message: {error: 'Too many submissions, please try again later.'}
+});
+
 app.use(express.json());
 app.use(cors());
 
@@ -23,7 +31,7 @@ app.post('/widgets', async (req, res) => {
     res.status(201).json(result.rows[0]);
 });
 
-app.post('/submissions', async (req, res) => {
+app.post('/submissions', submissionLimiter ,async (req, res) => {
     const { widget_id } = req.body;
 
     const widgetCheck = await pool.query('SELECT * FROM widgets WHERE id = $1', [widget_id]);
