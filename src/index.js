@@ -23,6 +23,28 @@ app.post('/widgets', async (req, res) => {
     res.status(201).json(result.rows[0]);
 });
 
+app.post('/submissions', async (req, res) => {
+    const { widget_id } = req.body;
+
+    const widgetCheck = await pool.query('SELECT * FROM widgets WHERE id = $1', [widget_id]);
+    if (widgetCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Widget not found' });
+    }
+    const requiredField = widgetCheck.rows[0].fields;
+    const submittedData = req.body.data;
+    const isValid = requiredField.every(field => submittedData[field] !== undefined);
+    if (!isValid){
+        return res.status(400).json({error: 'Missing required fields'}); 
+    }
+    const resultSubmission = await pool.query(
+        "INSERT INTO submissions (widget_id, data, ip_address, country, city) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [widget_id, JSON.stringify(submittedData), req.ip, null, null] 
+    );
+    res.status(201).json(resultSubmission.rows[0]);
+});
+
+
+
 app.get('/public/test', (req, res) => {
     res.json({message: 'Hello from the widget platfrom'});
 })
