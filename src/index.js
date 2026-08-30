@@ -32,12 +32,17 @@ app.post('/widgets', async (req, res) => {
 });
 
 app.post('/submissions', submissionLimiter ,async (req, res) => {
-    const { widget_id } = req.body;
+    const { widget_id, honeypot } = req.body;
+    
+    if (honeypot){
+        return res.status(201).json({message: 'Submission recieved'});
+    }
 
     const widgetCheck = await pool.query('SELECT * FROM widgets WHERE id = $1', [widget_id]);
     if (widgetCheck.rows.length === 0) {
         return res.status(404).json({ error: 'Widget not found' });
     }
+
     const requiredField = widgetCheck.rows[0].fields;
     const submittedData = req.body.data;
     const isValid = requiredField.every(field => submittedData[field] !== undefined);
