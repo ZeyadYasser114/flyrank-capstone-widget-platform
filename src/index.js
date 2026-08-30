@@ -3,6 +3,8 @@ const cors = require('cors');
 const app = express();
 const pool = require('./db.js');
 const rateLimit = require('express-rate-limit');
+const { sendNotification } = require('./services/notifications.service.js');
+const { enrichIp } = require('./services/enrichment.service.js');
 
 const submissionLimiter = rateLimit({
     windowMs: 60  * 1000,
@@ -28,14 +30,15 @@ app.post('/widgets', async (req, res) => {
         "INSERT INTO widgets (type, title, description, fields, button_text) VALUES ($1, $2, $3, $4, $5) RETURNING *",
         [type, title, description, JSON.stringify(fields), button_text]
     );
+
     res.status(201).json(result.rows[0]);
 });
 
-app.post('/submissions', submissionLimiter ,async (req, res) => {
+app.post('/submissions', submissionLimiter, async (req, res) => {
     const { widget_id, honeypot } = req.body;
-    
-    if (honeypot){
-        return res.status(201).json({message: 'Submission recieved'});
+
+    if (honeypot) {
+        return res.status(201).json({ message: 'Submission recieved' });
     }
 
     const widgetCheck = await pool.query('SELECT * FROM widgets WHERE id = $1', [widget_id]);
@@ -46,13 +49,23 @@ app.post('/submissions', submissionLimiter ,async (req, res) => {
     const requiredField = widgetCheck.rows[0].fields;
     const submittedData = req.body.data;
     const isValid = requiredField.every(field => submittedData[field] !== undefined);
-    if (!isValid){
-        return res.status(400).json({error: 'Missing required fields'}); 
+    if (!isValid) {
+        return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    const { country, city } = await enrichIp(req.ip);
+
     const resultSubmission = await pool.query(
         "INSERT INTO submissions (widget_id, data, ip_address, country, city) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [widget_id, JSON.stringify(submittedData), req.ip, null, null] 
+        [widget_id, JSON.stringify(submittedData), req.ip, country, city]
     );
+
+    try {
+        await sendNotification(resultSubmission.rows[0]);
+    } catch (err) {
+        console.log('Notification failed (non-critical):', err.message);
+    }
+
     res.status(201).json(resultSubmission.rows[0]);
 });
 
