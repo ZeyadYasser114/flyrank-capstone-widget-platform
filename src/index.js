@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 const pool = require('./db.js');
 const rateLimit = require('express-rate-limit');
@@ -14,6 +15,7 @@ const submissionLimiter = rateLimit({
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static(path.join(__dirname, '..')));
 
 const PORT = 3000;
 

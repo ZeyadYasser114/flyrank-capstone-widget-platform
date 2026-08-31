@@ -2,11 +2,6 @@
 <html>
 <body>
   <h1>Acme Steel's website</h1>
-  <script>
-    fetch('http://localhost:3000/public/test')
-      .then(res => res.json())
-      .then(data => console.log('Got:', data))
-      .catch(err => console.error('FAILED:', err));
-  </script>
+  <script src="http://localhost:3000/widget.js?id=1"></script>
 </body>
 </html>
