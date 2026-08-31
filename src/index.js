@@ -34,6 +34,16 @@ app.post('/widgets', async (req, res) => {
     res.status(201).json(result.rows[0]);
 });
 
+app.get('/widgets/:id/config', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const resultId = await pool.query('SELECT * FROM widgets WHERE id = $1', [id]);
+    if (resultId.rows.length === 0) {
+        return res.status(404).json({ error: 'Widget not found' });
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json(resultId.rows[0]);
+});
+
 app.post('/submissions', submissionLimiter, async (req, res) => {
     const { widget_id, honeypot } = req.body;
 
