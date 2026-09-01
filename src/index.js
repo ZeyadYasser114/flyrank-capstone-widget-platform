@@ -91,6 +91,16 @@ app.get('/widgets/:id/config', async (req, res) => {
     res.json(resultId.rows[0]);
 });
 
+app.get('/dashboard/submissions', requireAuth, async (req, res) => {
+    const resultDashSub = await pool.query(
+        `SELECT submissions.*
+         FROM submissions
+         JOIN widgets ON submissions.widget_id = widgets.id
+         WHERE widgets.tenant_id = $1
+        `, [req.user.id]
+    )
+    res.json(resultDashSub.rows);
+});
 app.post('/submissions', submissionLimiter, async (req, res) => {
     const { widget_id, honeypot } = req.body;
 
