@@ -1,0 +1,38 @@
+name: flyrank-capstone-widget-platform
+description: Embeddable widget and lead-capture platform — public submission API, geo enrichment, safe side effects, tenant-isolated dashboard.
+
+run: |
+  docker start widgetdb || docker run --name widgetdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=widgets -p 5433:5432 -v widgetdata:/var/lib/postgresql -d postgres
+  npm install
+  node src/db.js
+  node src/index.js
+
+seed: |
+  # Sign up and log in to get an access token (see README "Getting started" for the exact curl/Postman steps),
+  # then create a widget with POST /widgets using that token. This becomes the widget the test page embeds.
+
+test: |
+  # No automated test suite yet — see README "Known limitations".
+  # Manual verification steps are documented in EVIDENCE.md.
+
+base_url: http://localhost:3000
+
+endpoints:
+  - method: POST
+    path: /auth/signup
+    auth: none
+  - method: POST
+    path: /auth/login
+    auth: none
+  - method: POST
+    path: /widgets
+    auth: bearer
+  - method: GET
+    path: /widgets/:id/config
+    auth: none
+  - method: POST
+    path: /submissions
+    auth: none
+  - method: GET
+    path: /dashboard/submissions
+    auth: bearer
