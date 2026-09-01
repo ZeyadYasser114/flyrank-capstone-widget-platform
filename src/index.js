@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const supabase = require('./services/supabase.js');
 const app = express();
 const pool = require('./db.js');
 const rateLimit = require('express-rate-limit');
@@ -19,11 +20,55 @@ app.use(express.static(path.join(__dirname, '..')));
 
 const PORT = 3000;
 
+async function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    req.user = data.user;
+    next();
+}
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}/`);
 })
 
-app.post('/widgets', async (req, res) => {
+app.post('/auth/signup', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+    }
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+        return res.status(400).json({ error: error.message });
+    }
+    res.status(201).json(data.user);
+});
+
+app.post('/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+        return res.status(401).json({ error: 'Invalid login credentials' });
+    }
+    res.status(200).json({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
+});
+
+app.post('/widgets', requireAuth, async (req, res) => {
     const { type, title, description, fields, button_text } = req.body;
     if (!type || !title) {
         return res.status(400).json({error: 'type and title are required'});
@@ -80,8 +125,6 @@ app.post('/submissions', submissionLimiter, async (req, res) => {
 
     res.status(201).json(resultSubmission.rows[0]);
 });
-
-
 
 app.get('/public/test', (req, res) => {
     res.json({message: 'Hello from the widget platfrom'});
