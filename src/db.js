@@ -27,6 +27,10 @@ async function init() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
     `);
+
+    await pool.query(`
+        ALTER TABLE widgets ADD COLUMN IF NOT EXISTS tenant_id TEXT
+    `);
 }
 
 init();

@@ -69,15 +69,15 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.post('/widgets', requireAuth, async (req, res) => {
+    console.log('req.user:', req.user);
     const { type, title, description, fields, button_text } = req.body;
     if (!type || !title) {
         return res.status(400).json({error: 'type and title are required'});
     }
     const result = await pool.query(
-        "INSERT INTO widgets (type, title, description, fields, button_text) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [type, title, description, JSON.stringify(fields), button_text]
+        "INSERT INTO widgets (type, title, description, fields, button_text, tenant_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        [type, title, description, JSON.stringify(fields), button_text, req.user.id]
     );
-
     res.status(201).json(result.rows[0]);
 });
 
